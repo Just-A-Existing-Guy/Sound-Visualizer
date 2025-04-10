@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>20,000Hz Visualizer</title>
+  <style>
+    body {
+      margin: 0; background: black; color: white; font-family: sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    #controls {
+      margin: 1em;
+    }
+    canvas {
+      background: black; display: block;
+    }
+    #container {
+      width: 100vw;
+      overflow-x: scroll;
+      border-top: 2px solid #444;
+      border-bottom: 2px solid #444;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎵 20,000Hz Sound Visualizer</h2>
+  <input type="file" id="file" accept="audio/mpeg">
+  <div id="controls">
+    <button id="playPause">▶️ Play</button>
+    <input type="range" id="seek" value="0" min="0" max="1000" style="width:300px">
+  </div>
+  <div id="container">
+    <canvas id="canvas" width="20000" height="200"></canvas>
+  </div>
+  <audio id="audio" controls style="margin-top: 10px;"></audio>
+
+  <script src="visualizer.js"></script>
+</body>
+</html>
