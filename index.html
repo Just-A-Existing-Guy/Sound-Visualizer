@@ -2,38 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>20,000Hz Visualizer</title>
+  <title>Spectrogram Canvas</title>
   <style>
-    body {
-      margin: 0; background: black; color: white; font-family: sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    #controls {
-      margin: 1em;
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
     }
     canvas {
-      background: black; display: block;
+      display: block;
+      image-rendering: pixelated;
     }
-    #container {
-      width: 100vw;
-      overflow-x: scroll;
-      border-top: 2px solid #444;
-      border-bottom: 2px solid #444;
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.5em;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <h2>🎵 20,000Hz Sound Visualizer</h2>
-  <input type="file" id="file" accept="audio/mpeg">
-  <div id="controls">
-    <button id="playPause">▶️ Play</button>
-    <input type="range" id="seek" value="0" min="0" max="1000" style="width:300px">
+  <div id="ui">
+    <input type="file" id="file" accept="audio/mpeg">
+    <button id="play">▶️ Play</button>
+    <button id="pause">⏸ Pause</button>
   </div>
-  <div id="container">
-    <canvas id="canvas" width="20000" height="200"></canvas>
-  </div>
-  <audio id="audio" controls style="margin-top: 10px;"></audio>
-
-  <script src="visualizer.js"></script>
+  <canvas id="canvas"></canvas>
+  <script src="spectro.js"></script>
 </body>
 </html>
