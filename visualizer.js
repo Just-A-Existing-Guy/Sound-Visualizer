@@ -1,71 +1,82 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const audio = document.getElementById("audio");
-const fileInput = document.getElementById("file");
-const playPauseBtn = document.getElementById("playPause");
-const seekSlider = document.getElementById("seek");
 
-let audioBuffer;
-let animationId;
-let audioCtx, sourceNode, analyser;
+const playBtn = document.getElementById("play");
+const pauseBtn = document.getElementById("pause");
+const fileInput = document.getElementById("file");
+
+let audioCtx, analyser, sourceNode;
 let freqData;
+let audioBuffer, audioElement;
+let animationId;
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
+
+let yOffset = 0;
 
 fileInput.onchange = async (e) => {
   const file = e.target.files[0];
-  const url = URL.createObjectURL(file);
-  audio.src = url;
-  audio.load();
-
-  // Decode buffer
   const arrayBuffer = await file.arrayBuffer();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-  setupAnalyzer();
-};
+  if (audioElement) audioElement.remove();
+  audioElement = new Audio(URL.createObjectURL(file));
+  audioElement.crossOrigin = "anonymous";
 
-function setupAnalyzer() {
+  sourceNode = audioCtx.createMediaElementSource(audioElement);
   analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 32768; // Higher = better frequency resolution (~1Hz)
+  analyser.fftSize = 2048;
   freqData = new Uint8Array(analyser.frequencyBinCount);
 
-  sourceNode = audioCtx.createMediaElementSource(audio);
   sourceNode.connect(analyser);
   analyser.connect(audioCtx.destination);
-}
+
+  yOffset = 0;
+  ctx.clearRect(0, 0, width, height);
+};
 
 function draw() {
   analyser.getByteFrequencyData(freqData);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const row = ctx.createImageData(width, 1);
+  const binsPerPixel = freqData.length / width;
 
-  for (let x = 1; x < 20000 && x < freqData.length; x++) {
-    const value = freqData[x];
-    const height = value;
-    ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
-    ctx.fillRect(x, canvas.height - height, 1, height);
+  for (let x = 0; x < width; x++) {
+    const i = Math.floor(x * binsPerPixel);
+    const val = freqData[i]; // 0-255
+    const idx = x * 4;
+    row.data[idx + 0] = val;
+    row.data[idx + 1] = val;
+    row.data[idx + 2] = val;
+    row.data[idx + 3] = 255;
   }
 
-  seekSlider.value = (audio.currentTime / audio.duration) * 1000 || 0;
+  if (yOffset >= canvas.height) {
+    // Scroll up when full
+    const image = ctx.getImageData(0, 1, width, canvas.height - 1);
+    ctx.putImageData(image, 0, 0);
+    yOffset = canvas.height - 1;
+  }
+
+  ctx.putImageData(row, 0, yOffset);
+  yOffset++;
+
   animationId = requestAnimationFrame(draw);
 }
 
-// Controls
-playPauseBtn.onclick = () => {
-  if (!audioCtx) return;
-  if (audio.paused) {
-    audio.play();
-    playPauseBtn.textContent = "⏸ Pause";
-    draw();
-  } else {
-    audio.pause();
-    playPauseBtn.textContent = "▶️ Play";
-    cancelAnimationFrame(animationId);
-  }
+playBtn.onclick = () => {
+  if (!audioElement) return;
+  audioCtx.resume();
+  audioElement.play();
+  draw();
 };
 
-seekSlider.oninput = () => {
-  if (!audio.duration) return;
-  const time = (seekSlider.value / 1000) * audio.duration;
-  audio.currentTime = time;
+pauseBtn.onclick = () => {
+  if (!audioElement) return;
+  audioElement.pause();
+  cancelAnimationFrame(animationId);
 };
